@@ -11,10 +11,10 @@ class Gcode:
 
 	def parse(self):	
 		xstart, ystart, istart = 0, 0, 0
-		xlast, ylast, ilast = 0, 0, 0
+		xlast, ylast, self.ilast = 0, 0, 0
 		layer_index = 0
-		node_index = 0
-		current_layer = []
+		curve_index = 0
+		current_layer = Layer()
 		save_next_point = False
 	
 		for (i, line) in enumerate(self.lines):
@@ -36,56 +36,57 @@ class Gcode:
 					# there are some extra commands at the beginning that would 
 					# cause this code to create curves that start and end at (0, 0)
 					if xlast != xstart or ylast != ystart:
-						new_node = Node(xstart, ystart, xlast, ylast, node_index, istart, ilast)
-						current_layer.append(new_node)
-						node_index = node_index + 1
+						new_curve = Curve(xstart, ystart, xlast, ylast, curve_index, istart, self.ilast)
+						current_layer.addCurve(new_curve)
+						curve_index = curve_index + 1
 						xstart, ystart, xlast, ylast = 0, 0, 0, 0
 						istart = ilast + 1
 					save_next_point = True
 			
 				# Update by adding last layer
 				if words[0] == "G1" and words[1][0] == "Z":
-					# we are switching to a new layer, so add this layer's node list to layers and reset/update
+					# we are switching to a new layer, so add this layer's curve list to layers and reset/update
 					# don't do anything if there is no data in this layer (probably extra initialization commands)
-					if current_layer != []:
+					if current_layer.hasCurves():
 						self.layers.append(current_layer)
-						current_layer = []
+						current_layer = Layer()
 						layer_index = layer_index + 1
-						node_index = 0
+						curve_index = 0
 	
 		# add data from any incomplete layer
-		if current_layer != []:
+		if current_layer.hasCurves():
 			self.layers.append(current_layer)
 
 		return self.layers
 
-	def reorder(self, filename):
+	def reorder(self, filename, solutions):
 		outfile = open(filename, 'w')
-		'''
-		for l in range(0, header_end):
-			outfile.write(gcode[l])
+		
+		for l in range(0, self.header_end):
+			outfile.write(self.lines[l])
 	
 		for (i, (_, path)) in enumerate(solutions):
-			for (j, direction) in path:
-				node = layers[i][j]
-				if direction == 0:
-					for l in range(max(header_end + 1, node.get_startline()), node.get_endline() + 1):
-						outfile.write(gcode[l])
-				else:
+			curves = self.layers[i].getCurves()
+			for node in path:
+				curve = curves[node / 2]
+				if node % 2 == 0: # write this gcode in original order
+					for l in range(max(self.header_end + 1, curve.get_startline()), curve.get_endline() + 1):
+						outfile.write(self.lines[l])
+				else: # must reverse gcode
 					other_commands = True
-					line = max(header_end + 1, node.get_startline())
+					line = max(self.header_end + 1, curve.get_startline())
 					while other_commands:
-						words = gcode[line].split()
+						words = self.lines[line].split()
 						if words[0] == "G1" and words[1][0] == "X":
 							other_commands = False
 						else:
-							outfile.write(gcode[line])
+							outfile.write(self.lines[line])
 							line = line + 1
-					for l in range(node.get_endline(), line - 1, -1):
-						outfile.write(gcode[l])
+					for l in range(curve.get_endline(), line - 1, -1):
+						outfile.write(self.lines[l])
 	
-		for l in range(ilast + 1, len(gcode)):
-			outfile.write(gcode[l])
-		'''
+		for l in range(self.ilast + 1, len(self.lines)):
+			outfile.write(self.lines[l])
+		
 		outfile.close()
 

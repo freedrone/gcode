@@ -1,15 +1,98 @@
 from collections import defaultdict
 from math import sqrt
+from concorde import *
 
 def distance(x1, y1, x2, y2):
 	return sqrt((x2 - x1)**2 + (y2 - y1)**2)
 
-class Node:
-	x1, x2, y1, y2 = 0, 0, 0, 0
-	startline, endline = 0, 0
-	index = 0
-	edge_list = defaultdict(list)
+class Layer:
+	def __init__(self):
+		self.curvelist = []
+		self.edgematrix = []
+
+	def addCurve(self, curve):
+		self.curvelist.append(curve)
+
+	def hasCurves(self):
+		if len(self.curvelist) > 0:
+			return True
+		else:
+			return False
+
+	def getCurves(self):
+		return self.curvelist
+
+	def fillEdgeMatrix(self):
+		for j in xrange(2 * len(self.curvelist)):
+			row = []
+			for k in xrange(2 * len(self.curvelist)):
+				row.append(0)
+			self.edgematrix.append(row)
+		
+		for (j, c1) in enumerate(self.curvelist):
+			for (k, c2) in enumerate(self.curvelist):
+				if c1 is not c2:
+					for p1 in range(2):
+						for p2 in range(2):
+							self.edgematrix[2*j + p1][2*k + p2] = distance(c1.get_x(p1), c1.get_y(p1), c2.get_x(p2), c2.get_y(p2))
+				else: # create 0-weight edges between endpoints on a given curve
+					for p1 in range(2):
+						for p2 in range(2):
+							self.edgematrix[2*j + p1][2*k + p2] = 0
+
+	def getEdgeMatrix(self):
+		return self.edgematrix
+
 	
+	def minimizeCost(self, startpoint, layernum):
+		x, y = startpoint
+		mincost, best_start, best_path = float("inf"), 0, []
+
+		if len(self.curvelist) > 1:
+			tsp = Tsp(self.edgematrix, "layer" + str(layernum))		
+			tsp_path, tsp_cost = tsp.solve()
+			print tsp_cost, tsp_path
+
+			for (k, c) in enumerate(self.curvelist):
+				nodes = [2*k, 2*k + 1] # list of node numbers on this curve
+				indexes = [tsp_path.index(2*k), tsp_path.index(2*k + 1)] # list of locations of these nodes on path
+				
+				for (i, n) in enumerate(nodes):
+					# when picking a start point, we have to proceed to the end of the SFC first
+					# figure out which direction we have to traverse the TSP loop then
+					if (indexes[i] + 1) % len(tsp_path) == indexes[1 - i]: # is other endpoint ahead of me in path?
+						forward = True						
+						end = tsp_path[indexes[i]-1] # remove link behind me				
+					else:
+						forward = False
+						end = tsp_path[(indexes[i]+1) % len(tsp_path)] # remove link ahead of me
+
+					cost = tsp_cost - self.edgematrix[n][end]
+					d = distance(x, y, c.get_x(i), c.get_y(i))
+					if cost + d < mincost:
+						mincost, best_start, go_forward = cost + d, indexes[i], forward
+
+			if go_forward:
+				best_path = tsp_path[best_start:] + tsp_path[0:best_start]
+			else:
+				best_path = list(reversed(tsp_path[0:best_start+1])) + list(reversed(tsp_path[best_start+1:]))
+					
+		# no need for TSP if there is only one node on this layer - just pick which end to start at
+		elif len(self.curvelist) == 1:
+			d1 = distance(x, y, self.curvelist[0].get_x(0), self.curvelist[0].get_y(0))
+			d2 = distance(x, y, self.curvelist[0].get_x(1), self.curvelist[0].get_y(1))
+			if d1 < d2:
+				mincost, best_path = d1, [0, 1]
+			else:
+				mincost, best_path = d2, [1, 0]
+		
+		curve, end = (best_path[-1] / 2), (best_path[-1] % 2) # start point of last node on path for this layer
+		endpoint = (self.curvelist[curve].get_x(end), self.curvelist[curve].get_y(end))
+
+		return mincost, best_path, endpoint
+
+
+class Curve:
 	def __init__(self, xstart, ystart, xend, yend, number, startline, endline):
 		self.x1 = xstart
 		self.x2 = xend
@@ -18,16 +101,6 @@ class Node:
 		self.index = number
 		self.startline = startline
 		self.endline = endline
-		self.edge_list = defaultdict(list)
-		
-	def make_edges(self, other):
-		self.edge_list[0].append((distance(other.x1, other.y1, self.x1, self.y1), other.index, 0));
-		self.edge_list[0].append((distance(other.x2, other.y2, self.x1, self.y1), other.index, 1));
-		self.edge_list[1].append((distance(other.x1, other.y1, self.x2, self.y2), other.index, 0));
-		self.edge_list[1].append((distance(other.x2, other.y2, self.x2, self.y2), other.index, 1));
-		
-	def get_edges(self, end_index):
-		return self.edge_list[end_index]
 		
 	def get_x(self, point_0_or_1):
 		if point_0_or_1 == 0:
@@ -53,10 +126,4 @@ class Node:
 		
 	def print_node(self):
 		print self.index, self.startline, self.endline
-		
-	def print_edges(self):
-		for end in self.edge_list:
-			for edge in self.edge_list[end]:
-				print edge
-		print "\n\n"
 		
