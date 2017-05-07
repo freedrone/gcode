@@ -3,9 +3,14 @@ import matplotlib.animation as animation
 from matplotlib.collections import LineCollection
 from matplotlib.colors import ListedColormap, BoundaryNorm
 import numpy as np
+import sys
 
-if __name__ == "__main__":
-	file = open('star_concentric_reordered.gcode', 'r')
+if len(sys.argv) != 3:
+	print "Usage: animate-gcode.py <filename-no-extension> <save-animation: T | F>"
+
+else:
+	infile = sys.argv[1] + '.gcode'
+	file = open(infile, 'r')
 	xlayers, ylayers = [], []
 	xlist, ylist = [], []
 	xprev, yprev = 0, 0
@@ -72,7 +77,8 @@ if __name__ == "__main__":
 	ax.add_collection(line)
 	
 	ani = animation.FuncAnimation(fig, animate, frames=total_length, interval=5, blit=True)
-	print "Saving animation..."
-	#ani.save('star_concentric_reordered.mp4', writer=writer)
-	print "Done."
+	if sys.argv[2] == 'T' or sys.argv[2] == 't':
+		print "Saving animation..."
+		ani.save(sys.argv[1] + '.mp4', writer=writer)
+		print "Done."
 	plt.show()

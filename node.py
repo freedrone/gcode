@@ -51,7 +51,6 @@ class Layer:
 		if len(self.curvelist) > 1:
 			tsp = Tsp(self.edgematrix, "layer" + str(layernum))		
 			tsp_path, tsp_cost = tsp.solve()
-			print tsp_cost, tsp_path
 
 			for (k, c) in enumerate(self.curvelist):
 				nodes = [2*k, 2*k + 1] # list of node numbers on this curve

@@ -24,7 +24,7 @@ class Gcode:
 				# Handle motion commands to parse out points
 				if words[0] == "G1" and words[1][0] == "X":
 					xlast, ylast = float(words[1][1:]), float(words[2][1:])
-					ilast = i
+					self.ilast = i
 					if save_next_point:
 						xstart, ystart = xlast, ylast
 						save_next_point = False
@@ -40,7 +40,7 @@ class Gcode:
 						current_layer.addCurve(new_curve)
 						curve_index = curve_index + 1
 						xstart, ystart, xlast, ylast = 0, 0, 0, 0
-						istart = ilast + 1
+						istart = self.ilast + 1
 					save_next_point = True
 			
 				# Update by adding last layer
@@ -72,7 +72,7 @@ class Gcode:
 				if node % 2 == 0: # write this gcode in original order
 					for l in range(max(self.header_end + 1, curve.get_startline()), curve.get_endline() + 1):
 						outfile.write(self.lines[l])
-				else: # must reverse gcode
+				else: # must reverse gcode but write non-extrusion commands first to preserve order
 					other_commands = True
 					line = max(self.header_end + 1, curve.get_startline())
 					while other_commands:

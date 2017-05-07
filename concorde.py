@@ -1,4 +1,5 @@
 from subprocess import Popen
+import os
 
 class Tsp:
 	log_file = 'concorde.log'
@@ -13,6 +14,8 @@ class Tsp:
 		self.createTsplib()
 		self.runConcorde()
 		path = self.readSolution()
+		os.remove(self.tsplib_file)
+		os.remove(self.solution_file)
 		return path, self.getCost(path)
 
 	def createTsplib(self):
