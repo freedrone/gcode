@@ -3,6 +3,7 @@ from node import *
 class Gcode:
 	header_end = 0
 	layers = []
+	zgcode = []
 
 	def __init__(self, filename):
 		infile = open(filename, 'r')
@@ -26,7 +27,7 @@ class Gcode:
 					xlast, ylast = float(words[1][1:]), float(words[2][1:])
 					self.ilast = i
 					if save_next_point:
-						xstart, ystart = xlast, ylast
+						xstart, ystart, istart = xlast, ylast, i
 						save_next_point = False
 					if self.header_end == 0:
 						self.header_end = i + 1
@@ -40,7 +41,6 @@ class Gcode:
 						current_layer.addCurve(new_curve)
 						curve_index = curve_index + 1
 						xstart, ystart, xlast, ylast = 0, 0, 0, 0
-						istart = self.ilast + 1
 					save_next_point = True
 			
 				# Update by adding last layer
@@ -52,6 +52,7 @@ class Gcode:
 						current_layer = Layer()
 						layer_index = layer_index + 1
 						curve_index = 0
+						self.zgcode.append(line)
 	
 		# add data from any incomplete layer
 		if current_layer.hasCurves():
@@ -67,23 +68,22 @@ class Gcode:
 	
 		for (i, (_, path)) in enumerate(solutions):
 			curves = self.layers[i].getCurves()
-			for node in path:
+			for j in xrange(0, len(path), 2):
+				node = path[j]
 				curve = curves[node / 2]
 				if node % 2 == 0: # write this gcode in original order
 					for l in range(max(self.header_end + 1, curve.get_startline()), curve.get_endline() + 1):
-						outfile.write(self.lines[l])
-				else: # must reverse gcode but write non-extrusion commands first to preserve order
-					other_commands = True
-					line = max(self.header_end + 1, curve.get_startline())
-					while other_commands:
-						words = self.lines[line].split()
+						words = self.lines[l].split()
 						if words[0] == "G1" and words[1][0] == "X":
-							other_commands = False
-						else:
-							outfile.write(self.lines[line])
-							line = line + 1
-					for l in range(curve.get_endline(), line - 1, -1):
-						outfile.write(self.lines[l])
+							outfile.write(self.lines[l])
+				else: # must reverse gcode
+					for l in range(curve.get_endline(), max(self.header_end + 1, curve.get_startline()) - 1, -1):
+						words = self.lines[l].split()
+						if words[0] == "G1" and words[1][0] == "X":
+							outfile.write(self.lines[l])
+				outfile.write("G92 E0\n")
+			if i < len(self.zgcode):
+				outfile.write(self.zgcode[i])
 	
 		for l in range(self.ilast + 1, len(self.lines)):
 			outfile.write(self.lines[l])

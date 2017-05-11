@@ -72,6 +72,7 @@ else:
 	fig, ax = plt.subplots()
 	plt.ylim((0,200))
 	plt.xlim((0,200))
+	ax.set_aspect('equal')
 	
 	line = LineCollection([], cmap=plt.cm.rainbow, array=np.array([0.1, 9.4, 3.8, 2.0]))
 	ax.add_collection(line)
