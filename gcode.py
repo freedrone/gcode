@@ -1,5 +1,11 @@
 from node import *
 
+def isExtrusionCmd(words):
+	if words[0] == "G1" and words[1][0] == "X" and words[3][0] == "E":
+		return True
+	else:
+		return False
+
 class Gcode:
 	header_end = 0
 	layers = []
@@ -13,7 +19,6 @@ class Gcode:
 	def parse(self):	
 		xstart, ystart, istart = 0, 0, 0
 		xlast, ylast, self.ilast = 0, 0, 0
-		layer_index = 0
 		curve_index = 0
 		current_layer = Layer()
 		save_next_point = False
@@ -23,20 +28,19 @@ class Gcode:
 			if len(words) > 0:
 		
 				# Handle motion commands to parse out points
-				if words[0] == "G1" and words[1][0] == "X":
+				if isExtrusionCmd(words):
 					xlast, ylast = float(words[1][1:]), float(words[2][1:])
 					self.ilast = i
 					if save_next_point:
 						xstart, ystart, istart = xlast, ylast, i
 						save_next_point = False
 					if self.header_end == 0:
-						self.header_end = i + 1
+						self.header_end = i
 		
-				# Handle breaks in extrusion (within or between layers)
-				if (words[0] == "G92" and words[1] == "E0") or (words[0] == "G1" and words[1][0] == "Z"):
+				else:
 					# there are some extra commands at the beginning that would 
 					# cause this code to create curves that start and end at (0, 0)
-					if xlast != xstart or ylast != ystart:
+					if xlast != 0 or ylast != 0:
 						new_curve = Curve(xstart, ystart, xlast, ylast, curve_index, istart, self.ilast)
 						current_layer.addCurve(new_curve)
 						curve_index = curve_index + 1
@@ -50,7 +54,6 @@ class Gcode:
 					if current_layer.hasCurves():
 						self.layers.append(current_layer)
 						current_layer = Layer()
-						layer_index = layer_index + 1
 						curve_index = 0
 						self.zgcode.append(line)
 	
@@ -72,14 +75,12 @@ class Gcode:
 				node = path[j]
 				curve = curves[node / 2]
 				if node % 2 == 0: # write this gcode in original order
-					for l in range(max(self.header_end + 1, curve.get_startline()), curve.get_endline() + 1):
-						words = self.lines[l].split()
-						if words[0] == "G1" and words[1][0] == "X":
+					for l in range(curve.get_startline(), curve.get_endline() + 1):
+						if isExtrusionCmd(self.lines[l].split()):
 							outfile.write(self.lines[l])
 				else: # must reverse gcode
-					for l in range(curve.get_endline(), max(self.header_end + 1, curve.get_startline()) - 1, -1):
-						words = self.lines[l].split()
-						if words[0] == "G1" and words[1][0] == "X":
+					for l in range(curve.get_endline(), curve.get_startline() - 1, -1):
+						if isExtrusionCmd(self.lines[l].split()):
 							outfile.write(self.lines[l])
 				outfile.write("G92 E0\n")
 			if i < len(self.zgcode):
