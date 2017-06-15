@@ -1,7 +1,7 @@
 from node import *
 
 def isExtrusionCmd(words):
-	if words[0] == "G1" and words[1][0] == "X" and words[3][0] == "E":
+	if words[0] == "G1" and words[1][0] == "X":
 		return True
 	else:
 		return False
