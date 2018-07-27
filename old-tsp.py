@@ -7,7 +7,6 @@
 # ROB 534 Final Project, 3/7/17
 
 from collections import defaultdict
-from .node import Node
 
 
 # input graph format: ([Node1, Node2, ...], index)

@@ -1,5 +1,5 @@
-from .node import distance
-from .gcode import Gcode
+from libspy.node import distance
+from libspy.gcode import Gcode
 from time import time
 import sys
 

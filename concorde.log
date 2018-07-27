@@ -1,0 +1,9 @@
+./libs/concorde/TSP/concorde -x -m -o layer0.sol layer0.tsp
+Host: freedrone-pc  Current process id: 17766
+Using random seed 1532683770
+Problem Name: layer0
+Problem Type: TSP
+Number of Nodes: 8
+Explicit Lengths (CC_MATRIXNORM)
+Optimal Solution: 4040.00
+Total Running Time: 0.00 (seconds)
