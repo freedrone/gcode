@@ -1,5 +1,7 @@
 *.pyc
 *.log
+*_reordered.gcode
+
 tomcat
 
 # Binaries
