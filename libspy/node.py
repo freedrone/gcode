@@ -1,5 +1,5 @@
 from collections import defaultdict
-from math import sqrt
+from math import sqrt, ceil
 from concorde import Tsp
 
 
@@ -91,6 +91,7 @@ class Layer:
                 mincost, best_path = d2, [1, 0]
 
         curve, end = (best_path[-1] / 2), (best_path[-1] % 2)  # start point of last node on path for this layer
+        curve = max(0, min(int(ceil(curve)), len(self.curvelist)-1))  # ceil and clamp
         endpoint = (self.curvelist[curve].get_x(end), self.curvelist[curve].get_y(end))
 
         return mincost, best_path, endpoint
