@@ -1,5 +1,5 @@
 from libspy.node import Layer, Curve
-
+from math import ceil
 
 def isExtrusionCmd(words):
     if words[0] == "G1" and words[1][0] == "X":
@@ -75,7 +75,8 @@ class Gcode:
             curves = self.layers[i].getCurves()
             for j in range(0, len(path), 2):
                 node = path[j]
-                curve = curves[node / 2]
+                node_id = max(0, min(int(ceil(node/2)), len(curves)-1))  # ceil and clamp
+                curve = curves[node_id]
                 if node % 2 == 0:  # write this gcode in original order
                     for l in range(curve.get_startline(), curve.get_endline() + 1):
                         if isExtrusionCmd(self.lines[l].split()):
