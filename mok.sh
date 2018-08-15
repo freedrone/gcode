@@ -21,6 +21,7 @@ rm concorde.h
 curl -O https://gist.githubusercontent.com/freedrone/27d48beef2e2369e0e0495a2eb0c6b89/raw/cac9e7927a03872b4f7aa7aaedefe9ab17923513/concorde.h
 cd ..
 git clone https://github.com/freedrone/gcode.git
+mkdir gcode/libs
 rm -rf gcode/libs/concorde
 rm -rf gcode/libs/qsopt
 ln -s $CONCORDE_DIR/TSP/concorde gcode/libs/concorde
