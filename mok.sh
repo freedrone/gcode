@@ -1,7 +1,7 @@
 #!/usr/bin/env bash
 mkdir mok
-export MOKDIR=$(pwd)
 cd mok
+export MOKDIR=$(pwd)
 curl -O http://www.math.uwaterloo.ca/tsp/concorde/downloads/codes/src/co031219.tgz
 mkdir qsopt
 cd qsopt
