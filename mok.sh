@@ -1,5 +1,6 @@
 #!/usr/bin/env bash
 mkdir mok
+export MOKDIR=$(pwd)
 cd mok
 curl -O http://www.math.uwaterloo.ca/tsp/concorde/downloads/codes/src/co031219.tgz
 mkdir qsopt
@@ -24,5 +25,5 @@ git clone https://github.com/freedrone/gcode.git
 mkdir gcode/libs
 rm -rf gcode/libs/concorde
 rm -rf gcode/libs/qsopt
-ln -s $CONCORDE_DIR/TSP/concorde gcode/libs/concorde
-ln -s $CONCORDE_DIR/LINKERN/linkern gcode/libs/linkern
+ln -s $CONCORDE_DIR/TSP/concorde $MOKDIR/gcode/libs/concorde
+ln -s $CONCORDE_DIR/LINKERN/linkern $MOKDIR/gcode/libs/linkern
