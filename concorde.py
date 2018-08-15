@@ -36,7 +36,7 @@ class Tsp:
         tspfile.close()
 
     def runConcorde(self):
-        args = ['./libs/concorde/TSP/concorde', '-x', '-m', '-o', self.solution_file, self.tsplib_file]
+        args = ['./libs/concorde', '-x', '-m', '-o', self.solution_file, self.tsplib_file]
 
         try:
             log = open(self.log_file, 'a')

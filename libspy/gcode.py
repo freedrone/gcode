@@ -74,9 +74,8 @@ class Gcode:
         for (i, (_, path)) in enumerate(solutions):
             curves = self.layers[i].getCurves()
             for j in range(0, len(path), 2):
-                node = path[j]
-                node_id = max(0, min(int(ceil(node/2)), len(curves)-1))  # ceil and clamp
-                curve = curves[node_id]
+                node = path[j] // 2
+                curve = curves[node]
                 if node % 2 == 0:  # write this gcode in original order
                     for l in range(curve.get_startline(), curve.get_endline() + 1):
                         if isExtrusionCmd(self.lines[l].split()):
