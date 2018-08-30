@@ -1,6 +1,7 @@
 *.pyc
 *.log
 *_reordered.gcode
+libs/*
 
 tomcat
 
